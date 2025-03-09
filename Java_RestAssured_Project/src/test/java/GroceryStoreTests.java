@@ -1,6 +1,9 @@
+import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
+import org.json.simple.JSONObject;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -15,11 +18,20 @@ public class GroceryStoreTests {
 
     int productID;
     int replaceProductID;
+    String accessToken;
+    String cartID;
+
 
     @BeforeClass
     public void setupEnvironment() {
         baseURI = "https://simple-grocery-store-api.glitch.me";
     }
+
+
+    public String extractStringJsonResponse(ValidatableResponse response, String value) {
+        return response.extract().jsonPath().getString(value);
+    }
+
 
     @Test
     public void getStatusEndPointCode200() {
@@ -29,6 +41,7 @@ public class GroceryStoreTests {
                 .then()
                 .statusCode(200).log().status();
     }
+
 
     @Test
     public void getStatusEndPointResponseUP() {
@@ -50,6 +63,7 @@ public class GroceryStoreTests {
                 .statusCode(200);
     }
 
+
     @Test
     public void getFirstAndFourthElement() {
         Response response = given()
@@ -70,6 +84,7 @@ public class GroceryStoreTests {
         Assert.assertEquals(replaceProductID, 1225);
     }
 
+
     @Test
     public void getFirstProductFoundInStock() {
         given()
@@ -80,6 +95,7 @@ public class GroceryStoreTests {
                 .body("id", hasItem(productID));
     }
 
+
     @Test
     public void getAllProductsResponseTimeLessThan5000mls() {
         given()
@@ -88,6 +104,7 @@ public class GroceryStoreTests {
                 .then()
                 .time(Matchers.lessThan(5000L));
     }
+
 
     @Test
     public void getProductWithID4643byPath() {
@@ -100,6 +117,7 @@ public class GroceryStoreTests {
                 .body("id", equalTo(productID));
     }
 
+
     @Test
     public void getAllProductWithCategoryCoffeeByQuery() {
         String categoryCoffee = "coffee";
@@ -111,6 +129,180 @@ public class GroceryStoreTests {
                 .assertThat()
                 .body("category", hasItem("coffee")).log().body();
     }
+
+
+    @Test
+    public void getAllProductsWithCategoryFreshProduceAvailableLimitedTo3Objects() {
+        String category = "fresh-produce";
+        String limit = "3";
+        String available = "true";
+
+        given()
+                .queryParams("category", category,
+                        "results", limit,
+                        "available", available)
+                .when()
+                .get("/products")
+                .then()
+                .assertThat()
+                .body("size()", equalTo(3))
+                .log().body();
+    }
+
+
+    @Test
+    public void postRegisterNewAPIkey() {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("clientName", "Mark Qakk");
+        jsonObject.put("clientEmail", "MarkQak@asdasdk.zz");
+
+        ValidatableResponse response = given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .when()
+                .post("/api-clients")
+                .then()
+                .statusCode(201).log().body();
+
+        accessToken = extractStringJsonResponse(response, "accessToken");
+        System.out.println(accessToken);
+    }
+
+
+    @Test
+    public void postNegativeTCprovidedInvalidParams() {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("clientName", "Mark");
+        jsonObject.put("clientEmail", "MarkQa");
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .when()
+                .post("/api-clients")
+                .then()
+                .statusCode(400).log().body();
+    }
+
+
+    @Test
+    public void postNegativeTCConflict() {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("clientName", "Mark Qakk");
+        jsonObject.put("clientEmail", "MarkQak@asdasdk.zz");
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .when()
+                .post("/api-clients")
+                .then()
+                .statusCode(409).log().body();
+    }
+
+
+    @Test
+    public void postCreateNewCart() {
+        ValidatableResponse response = when()
+                .post("/carts")
+                .then()
+                .statusCode(201);
+
+        String createdJsonResponse = extractStringJsonResponse(response, "created");
+
+        if (createdJsonResponse.equals("true")) {
+            cartID = extractStringJsonResponse(response, "cartId");
+            System.out.println(cartID);
+        }
+
+        given()
+                .pathParam("cartId", cartID)
+                .when()
+                .get("/carts/{cartId}")
+                .then()
+                .statusCode(200);
+
+        int productid = 4643;
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("productId", productid);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .pathParam("cartId", cartID)
+                .when()
+                .post("/carts/{cartId}/items")
+                .then()
+                .body("error", equalTo("This product has already been added to cart."));
+
+
+    }
+
+
+    @Test
+    public void getCartStatusCode200() {
+        given()
+                .pathParam("cartId", cartID)
+                .when()
+                .get("/carts/{cartId}")
+                .then()
+                .statusCode(200);
+    }
+
+
+    @Test
+    public void postAddItemToCartStatusCode200() {
+        int productid = 4643;
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("productId", productid);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .pathParam("cartId", cartID)
+                .when()
+                .post("/carts/{cartId}/items")
+                .then()
+                .statusCode(201);
+    }
+
+
+    @Test
+    public void postNegativeTCItemAlreadyAddedToCart() {
+        int productid = 4643;
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("productId", productid);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .pathParam("cartId", cartID)
+                .when()
+                .post("/carts/{cartId}/items")
+                .then()
+                .body("error", equalTo("This product has already been added to cart."));
+    }
+
+
+
+
+
+
+
+
+
 
 
 
