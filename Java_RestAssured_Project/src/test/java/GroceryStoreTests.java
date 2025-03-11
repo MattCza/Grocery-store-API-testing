@@ -20,6 +20,8 @@ public class GroceryStoreTests {
     int replaceProductID;
     String accessToken;
     String cartID;
+    String itemCartID;
+    String itemInCartID;
 
 
     @BeforeClass
@@ -33,45 +35,26 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
-    public void getStatusEndPointCode200() {
+    @Test(priority = 1)
+    public void getStatusEndPointCode200andResponseBodyUP() {
         given()
                 .when()
                 .get("/status")
                 .then()
-                .statusCode(200).log().status();
-    }
-
-
-    @Test
-    public void getStatusEndPointResponseUP() {
-        given()
-                .when()
-                .get("/status")
-                .then()
+                .statusCode(200)
                 .body("status", equalTo("UP"))
                 .log().body();
     }
 
 
-    @Test
-    public void getAllProductsStatusCode200() {
-        given()
-                .when()
-                .get("/products")
-                .then()
-                .statusCode(200);
-    }
-
-
-    @Test
-    public void getFirstAndFourthElement() {
+    @Test(priority = 2)
+    public void getAllProducts() {
         Response response = given()
                 .when()
-                .get("/products");
+                .get("/products")
+                .then().extract().response();
 
         JsonPath jsonPath = response.jsonPath();
-
         List<Map<String, Object>> products = jsonPath.getList("findAll { it.inStock == true }");
 
         Map<String, Object> product1 = products.get(0);
@@ -80,12 +63,14 @@ public class GroceryStoreTests {
         productID = (int) product1.get("id");
         replaceProductID = (int) product4.get("id");
 
+        Assert.assertEquals(response.getStatusCode(), 200,
+                "Status code is not 200");
         Assert.assertEquals(productID, 4643);
         Assert.assertEquals(replaceProductID, 1225);
     }
 
 
-    @Test
+    @Test(priority = 2)
     public void getFirstProductFoundInStock() {
         given()
                 .when()
@@ -96,7 +81,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 2)
     public void getAllProductsResponseTimeLessThan5000mls() {
         given()
                 .when()
@@ -106,7 +91,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 2)
     public void getProductWithID4643byPath() {
         given()
                 .pathParam("productID", productID)
@@ -118,7 +103,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 2)
     public void getAllProductWithCategoryCoffeeByQuery() {
         String categoryCoffee = "coffee";
         given()
@@ -131,7 +116,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 2)
     public void getAllProductsWithCategoryFreshProduceAvailableLimitedTo3Objects() {
         String category = "fresh-produce";
         String limit = "3";
@@ -150,7 +135,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 3)
     public void postRegisterNewAPIkey() {
         JSONObject jsonObject = new JSONObject();
 
@@ -171,8 +156,8 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
-    public void postNegativeTCprovidedInvalidParams() {
+    @Test(priority = 3)
+    public void postNegativeTCProvidedInvalidParams() {
         JSONObject jsonObject = new JSONObject();
 
         jsonObject.put("clientName", "Mark");
@@ -189,7 +174,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 4)
     public void postNegativeTCConflict() {
         JSONObject jsonObject = new JSONObject();
 
@@ -207,7 +192,7 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 5)
     public void postCreateNewCart() {
         ValidatableResponse response = when()
                 .post("/carts")
@@ -227,27 +212,10 @@ public class GroceryStoreTests {
                 .get("/carts/{cartId}")
                 .then()
                 .statusCode(200);
-
-        int productid = 4643;
-        JSONObject jsonObject = new JSONObject();
-
-        jsonObject.put("productId", productid);
-
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
-                .when()
-                .post("/carts/{cartId}/items")
-                .then()
-                .body("error", equalTo("This product has already been added to cart."));
-
-
     }
 
 
-    @Test
+    @Test(priority = 6)
     public void getCartStatusCode200() {
         given()
                 .pathParam("cartId", cartID)
@@ -258,14 +226,13 @@ public class GroceryStoreTests {
     }
 
 
-    @Test
+    @Test(priority = 6)
     public void postAddItemToCartStatusCode200() {
-        int productid = 4643;
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("productId", productid);
+        jsonObject.put("productId", productID);
 
-        given()
+        Response response = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(jsonObject.toJSONString())
@@ -273,16 +240,22 @@ public class GroceryStoreTests {
                 .when()
                 .post("/carts/{cartId}/items")
                 .then()
-                .statusCode(201);
+                .statusCode(201).extract().response();
+
+        JsonPath jsonPath = response.jsonPath();
+        itemCartID = jsonPath.getString("itemId");
+
+
+        System.out.println(response.getBody().asString());
+        System.out.println("itemId: " + itemCartID);
     }
 
 
-    @Test
+    @Test(priority = 7)
     public void postNegativeTCItemAlreadyAddedToCart() {
-        int productid = 4643;
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("productId", productid);
+        jsonObject.put("productId", productID);
 
         given()
                 .contentType(ContentType.JSON)
@@ -295,15 +268,129 @@ public class GroceryStoreTests {
                 .body("error", equalTo("This product has already been added to cart."));
     }
 
+    @Test(priority = 7)
+    public void getCartItemsResponseBodyIsNotEmpty() {
+        Response response = given()
+                .pathParam("cartId", cartID)
+                .when()
+                .post("/carts/{cartId}/items")
+                .then().extract().response();
 
 
 
+        Assert.assertFalse(response.getBody().asString().isEmpty(), "Response body is empty");
+    }
 
+    @Test(priority = 7)
+    public void getCartItemsResponseContainsProductID() {
 
+        Response response = given()
+                .pathParam("cartId", cartID)
+                .when()
+                .get("/carts/{cartId}/items")
+                .then().extract().response();
 
+        JsonPath jsonPath = response.jsonPath();
+        boolean containsProductId = jsonPath.getList("productId").contains(productID);
 
+        Assert.assertTrue(containsProductId, "Response does not contain productId = " + productID);
+    }
+
+    @Test(priority = 8)
+    public void patchUpdateQuantityOfProduct() {
+
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("quantity", 2);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .pathParam("cartId", cartID)
+                .pathParam("itemId", itemCartID)
+                .when()
+                .patch("/carts/{cartId}/items/{itemId}")
+                .then().statusCode(204);
+
+//        JsonPath jsonPath = response.jsonPath();
+//        boolean containsProductId = jsonPath.getList("productId").contains(productID);
+//
+//        Assert.assertTrue(containsProductId, "Response does not contain productId = " + productID);
+    }
+
+    @Test(priority = 9)
+    public void getCartItemsQuantityUpdated() {
+
+        Response response = given()
+                .pathParam("cartId", cartID)
+                .when()
+                .get("/carts/{cartId}/items")
+                .then().extract().response();
+
+        JsonPath jsonPath = response.jsonPath();
+        boolean containsProductId = jsonPath.getList("quantity").contains(2);
+
+        Assert.assertTrue(containsProductId, "Quantity not equals 2 ");
+    }
+
+    @Test(priority = 10)
+    public void putReplaceProductInCart() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("productId", replaceProductID);
+        jsonObject.put("quantity", 1);
+
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(jsonObject.toJSONString())
+                .pathParam("cartId", cartID)
+                .pathParam("itemId", itemCartID)
+                .when()
+                .put("/carts/{cartId}/items/{itemId}")
+                .then().statusCode(204);
+    }
+
+    @Test(priority = 11)
+    public void deleteProductInCart() {
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .pathParam("cartId", cartID)
+                .pathParam("itemId", itemInCartID)
+                .when()
+                .delete("/carts/{cartId}/items/{itemId}")
+                .then().statusCode(204);
+    }
+
+    @Test(priority = 12)
+    public void deleteNegativeTCProductInCartNotFound() {
+        given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .pathParam("cartId", cartID)
+                .pathParam("itemId", itemInCartID)
+                .when()
+                .delete("/carts/{cartId}/items/{itemId}")
+                .then().statusCode(404);
+    }
+
+    @Test(priority = 12)
+    public void getCartItemsQuantityUpdated2() {
+
+        given()
+                .pathParam("cartId", cartID)
+                .when()
+                .get("/carts/{cartId}/items")
+                .then().log().body();
+
+//        JsonPath jsonPath = response.jsonPath();
+//        boolean containsProductId = jsonPath.getList("quantity").contains(2);
+//
+//        Assert.assertTrue(containsProductId, "Quantity not equals 2 ");
+    }
 
 
 
 
 }
+
