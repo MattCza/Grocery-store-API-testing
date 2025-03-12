@@ -17,6 +17,8 @@ public class GroceryStoreTests {
 
     int productID;
     int replaceProductID;
+    String fullName = "Timothy Lang";
+    String emailAddress = "TimothyLang@gmaasd.px";
     String accessToken;
     String cartID;
     String itemCartID;
@@ -118,8 +120,8 @@ public class GroceryStoreTests {
     public void postRegisterNewAPIkey() {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("clientName", "Mark Qakkkk");
-        jsonObject.put("clientEmail", "MarkQakkkk@asdasdk.zz");
+        jsonObject.put("clientName", fullName);
+        jsonObject.put("clientEmail", emailAddress);
 
         Response response = given()
                 .contentType(ContentType.JSON)
@@ -140,8 +142,8 @@ public class GroceryStoreTests {
     public void postNegativeTCRegisterAPIConflict() {
         JSONObject jsonObject = new JSONObject();
 
-        jsonObject.put("clientName", "Mark Qakkkk");
-        jsonObject.put("clientEmail", "MarkQakkkk@asdasdk.zz");
+        jsonObject.put("clientName", fullName);
+        jsonObject.put("clientEmail", emailAddress);
 
         given()
                 .contentType(ContentType.JSON)
@@ -403,18 +405,26 @@ public class GroceryStoreTests {
 
 
     @Test(priority = 15)
-    public void patchOrder() {
+    public void patchOrderResponseStatusCode204() {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("customerName", "Joe Doe");
+        jsonObject.put("comment", "Pick-up at 4pm");
+
         given()
+                .accept(ContentType.JSON)
+                .contentType(ContentType.JSON)
+                .body(jsonObject.toJSONString())
                 .auth().oauth2(accessToken)
+                .pathParam("orderId", orderID)
                 .when()
-                .get("/orders/")
+                .patch("/orders/{orderId}")
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
 
     @Test(priority = 16)
-    public void getAllOrders2() {
+    public void getAllOrdersAfterPatch() {
         given()
                 .auth().oauth2(accessToken)
                 .when()
@@ -425,18 +435,30 @@ public class GroceryStoreTests {
 
 
     @Test(priority = 17)
-    public void deleteAllOrders2() {
+    public void deleteOrders() {
         given()
                 .auth().oauth2(accessToken)
+                .pathParam("orderId", orderID)
                 .when()
-                .get("/orders/")
+                .delete("/orders/{orderId}")
                 .then()
-                .statusCode(200);
+                .statusCode(204);
+    }
+
+    @Test(priority = 18)
+    public void deleteOrdersNotFound() {
+        given()
+                .auth().oauth2(accessToken)
+                .pathParam("orderId", orderID)
+                .when()
+                .delete("/orders/{orderId}")
+                .then()
+                .statusCode(404);
     }
 
 
     @Test(priority = 18)
-    public void getAllOrders3() {
+    public void getAllOrdersFinal() {
         given()
                 .auth().oauth2(accessToken)
                 .when()
