@@ -1,10 +1,8 @@
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import io.restassured.response.ValidatableResponse;
 import org.json.simple.JSONObject;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -13,31 +11,45 @@ import java.util.Map;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
-public class GroceryStoreTests {
+public class GroceryStoreTests extends BaseTest{
 
-    int productID;
-    int replaceProductID;
-    String fullName = "Timothy Lang";
-    String emailAddress = "TimothyLang@gmaasd.px";
-    String accessToken;
-    String cartID;
-    String itemCartID;
-    String orderID;
+    private int productId;
+    private int replaceProductId;
+    private final String FULL_NAME = "Timothy Lang1";
+    private final String EMAIL = "TimothyLang1@gmaasd.px";
+    private String accessToken;
+    private String cartId;
+    private String itemCartId;
+    private String orderId;
 
 
-    @BeforeClass
-    public void setupEnvironment() {
-        baseURI = "https://simple-grocery-store-api.glitch.me";
+    private Response sendPostRequest(String endpoint, JSONObject requestBody) {
+        return given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(requestBody.toJSONString())
+                .when()
+                .post(endpoint)
+                .then()
+                .extract().response();
     }
 
+    private Response sendGetRequest(String endpoint, Map<String, Object> queryParams) {
+        return given()
+                .queryParams(queryParams)
+                .when()
+                .get(endpoint)
+                .then()
+                .extract().response();
+    }
 
-    public String extractStringJsonResponse(ValidatableResponse response, String value) {
-        return response.extract().jsonPath().getString(value);
+    private String extractJsonValue(Response response, String jsonPath) {
+        return response.jsonPath().getString(jsonPath);
     }
 
 
     @Test(priority = 1)
-    public void getStatusEndPointCode200andResponseBodyUP() {
+    public void testStatusEndpointReturns200AndStatusUp() {
         given()
                 .when()
                 .get("/status")
@@ -47,9 +59,8 @@ public class GroceryStoreTests {
                 .log().body();
     }
 
-
-    @Test(priority = 1)
-    public void getAllProductsWithin500ms() {
+    @Test(priority = 2)
+    public void testGetAllProductsWithin500ms() {
         Response response = given()
                 .when()
                 .get("/products")
@@ -57,37 +68,30 @@ public class GroceryStoreTests {
                 .time(lessThan(5000L))
                 .extract().response();
 
-        JsonPath jsonPath = response.jsonPath();
-        List<Map<String, Object>> inStockProducts = jsonPath.getList("findAll { it.inStock == true }");
+        List<Map<String, Object>> inStockProducts = response.jsonPath().getList("findAll { it.inStock == true }");
 
-        productID = (int) inStockProducts.get(0).get("id");
-        replaceProductID = (int) inStockProducts.get(3).get("id");
-
-        Assert.assertEquals(response.getStatusCode(), 200,
-                "Status code is not 200");
-
-        Assert.assertEquals(productID, 4643);
-        Assert.assertEquals(replaceProductID, 1225);
+        Assert.assertFalse(inStockProducts.isEmpty(), "No in-stock products found");
+        productId = (int) inStockProducts.get(0).get("id");
+        replaceProductId = inStockProducts.size() > 3 ? (int) inStockProducts.get(3).get("id") : productId;
     }
 
 
     @Test(priority = 2)
-    public void getProductWithID4643byPathParam() {
+    public void testGetProductById() {
         given()
-                .pathParam("productID", productID)
+                .pathParam("productId", productId)
                 .when()
-                .get("/products/{productID}")
+                .get("/products/{productId}")
                 .then()
                 .assertThat()
-                .body("id", equalTo(4643));
+                .body("id", equalTo(productId));
     }
 
 
     @Test(priority = 2)
-    public void getAllProductWithCategoryCoffeeByQuery() {
-        String categoryCoffee = "coffee";
+    public void testGetAllProductsByCategoryCoffee() {
         given()
-                .queryParam("category", categoryCoffee)
+                .queryParam("category", "coffee")
                 .when()
                 .get("/products")
                 .then()
@@ -96,17 +100,12 @@ public class GroceryStoreTests {
                 .log().body();
     }
 
-
     @Test(priority = 2)
-    public void getAllProductsWithCategoryFreshProduceAvailableLimitedTo3Objects() {
-        String category = "fresh-produce";
-        String limit = "3";
-        String available = "true";
-
+    public void testGetAllProductsWithCategoryFreshProduceLimitedTo3() {
         given()
-                .queryParams("category", category,
-                        "results", limit,
-                        "available", available)
+                .queryParams("category", "fresh-produce",
+                        "results", "3",
+                        "available", "true")
                 .when()
                 .get("/products")
                 .then()
@@ -117,162 +116,106 @@ public class GroceryStoreTests {
 
 
     @Test(priority = 2)
-    public void postRegisterNewAPIkey() {
-        JSONObject jsonObject = new JSONObject();
+    public void testRegisterNewApiKey() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("clientName", FULL_NAME);
+        requestBody.put("clientEmail", EMAIL);
 
-        jsonObject.put("clientName", fullName);
-        jsonObject.put("clientEmail", emailAddress);
-
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .when()
-                .post("/api-clients")
-                .then()
-                .statusCode(201)
-                .extract().response();
-
-        accessToken = response.jsonPath().getString("accessToken");
-        System.out.println(accessToken);
+        Response response = sendPostRequest("/api-clients", requestBody);
+        Assert.assertEquals(response.getStatusCode(), 201);
+        accessToken = extractJsonValue(response, "accessToken");
     }
 
 
     @Test(priority = 3)
-    public void postNegativeTCRegisterAPIConflict() {
-        JSONObject jsonObject = new JSONObject();
+    public void testRegisterApiKeyConflict() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("clientName", FULL_NAME);
+        requestBody.put("clientEmail", EMAIL);
 
-        jsonObject.put("clientName", fullName);
-        jsonObject.put("clientEmail", emailAddress);
-
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .when()
-                .post("/api-clients")
-                .then()
-                .statusCode(409).log().body();
+        Response response = sendPostRequest("/api-clients", requestBody);
+        Assert.assertEquals(response.getStatusCode(), 409);
     }
-
 
     @Test(priority = 3)
-    public void postNegativeTCProvideInvalidEmail() {
-        JSONObject jsonObject = new JSONObject();
+    public void testRegisterApiKeyWithInvalidEmail() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("clientName", "Mark");
+        requestBody.put("clientEmail", "MarkQa");
 
-        jsonObject.put("clientName", "Mark");
-        jsonObject.put("clientEmail", "MarkQa");
-
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .when()
-                .post("/api-clients")
-                .then()
-                .statusCode(400)
-                .log().body();
+        Response response = sendPostRequest("/api-clients", requestBody);
+        Assert.assertEquals(response.getStatusCode(), 400);
     }
 
-
-
-
-
-    @Test(priority = 4)
-    public void postCreateNewCart() {
+    @Test(priority = 3)
+    public void testCreateNewCart() {
         Response response = when()
                 .post("/carts")
                 .then()
                 .statusCode(201)
                 .extract().response();
 
-        String createdJsonResponse = response.jsonPath().getString("created");
-
-        if (createdJsonResponse.equals("true")) {
-            cartID = response.jsonPath().getString("cartId");
-            System.out.println(cartID);
-        }
+        cartId = extractJsonValue(response, "cartId");
+        Assert.assertNotNull(cartId, "Cart ID should not be null");
     }
 
 
-    @Test(priority = 5)
-    public void getCartStatusCode200Created() {
+    @Test(priority = 4)
+    public void testGetCartStatusCode200() {
         given()
-                .pathParam("cartId", cartID)
+                .pathParam("cartId", cartId)
                 .when()
                 .get("/carts/{cartId}")
                 .then()
                 .statusCode(200);
     }
 
+    @Test(priority = 4)
+    public void testAddItemToCart() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("productId", productId);
+
+        Response response = sendPostRequest("/carts/" + cartId + "/items", requestBody);
+        Assert.assertEquals(response.getStatusCode(), 201);
+
+        itemCartId = extractJsonValue(response, "itemId");
+        Assert.assertNotNull(itemCartId, "Item ID should not be null");
+    }
 
     @Test(priority = 5)
-    public void postAddItemToCartStatusCode201() {
-        JSONObject jsonObject = new JSONObject();
+    public void testAddItemToCartConflict() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("productId", productId);
 
-        jsonObject.put("productId", productID);
-
-        Response response = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
-                .when()
-                .post("/carts/{cartId}/items")
-                .then()
-                .statusCode(201)
-                .extract().response();
-
-        JsonPath jsonPath = response.jsonPath();
-        itemCartID = jsonPath.getString("itemId");
-
-        System.out.println(response.getBody().asString());
-        System.out.println("itemId: " + itemCartID);
+        Response response = sendPostRequest("/carts/" + cartId + "/items", requestBody);
+        String errorMessage = extractJsonValue(response, "error");
+        Assert.assertEquals(errorMessage, "This product has already been added to cart.",
+                "Error message does not match expected value");
     }
 
 
     @Test(priority = 6)
-    public void postNegativeTCItemAlreadyAddedToCartResponseMessage() {
-        JSONObject jsonObject = new JSONObject();
-
-        jsonObject.put("productId", productID);
-
+    public void testGetCartItems() {
         given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
-                .when()
-                .post("/carts/{cartId}/items")
-                .then()
-                .body("error", equalTo("This product has already been added to cart."));
-    }
-
-
-    @Test(priority = 7)
-    public void getCartItemsResponseBodyIsNotEmptyAndContainsProductID() {
-        given()
-                .pathParam("cartId", cartID)
+                .pathParam("cartId", cartId)
                 .when()
                 .get("/carts/{cartId}/items")
                 .then()
-                .log().body()
                 .body("", not(empty()))
-                .body("productId", hasItem(productID));
+                .body("productId", hasItem(productId));
     }
 
-
-    @Test(priority = 7)
-    public void patchUpdateQuantityOfProduct() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("quantity", 2);
+    @Test(priority = 6)
+    public void testUpdateProductQuantityInCart() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("quantity", 2);
 
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
-                .pathParam("itemId", itemCartID)
+                .body(requestBody.toJSONString())
+                .pathParam("cartId", cartId)
+                .pathParam("itemId", itemCartId)
                 .when()
                 .patch("/carts/{cartId}/items/{itemId}")
                 .then()
@@ -280,70 +223,66 @@ public class GroceryStoreTests {
     }
 
 
-    @Test(priority = 8)
-    public void getCartItemsQuantityUpdated() {
-        Response response = given()
-                .pathParam("cartId", cartID)
+    @Test(priority = 7)
+    public void testGetCartItemsAfterQuantityUpdate() {
+        given()
+                .pathParam("cartId", cartId)
                 .when()
                 .get("/carts/{cartId}/items")
                 .then()
-                .body("quantity", hasItem(2))
-                .extract().response();
+                .body("quantity", hasItem(2));
     }
 
     @Test(priority = 9)
-    public void putReplaceProductInCart() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("productId", replaceProductID);
-        jsonObject.put("quantity", 1);
+    public void testReplaceProductInCart() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("productId", replaceProductId);
+        requestBody.put("quantity", 1);
 
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
-                .pathParam("itemId", itemCartID)
+                .body(requestBody.toJSONString())
+                .pathParam("cartId", cartId)
+                .pathParam("itemId", itemCartId)
                 .when()
                 .put("/carts/{cartId}/items/{itemId}")
                 .then().statusCode(204);
     }
 
-    @Test(priority = 10)
-    public void deleteProductInCart() {
-        System.out.println(cartID);
-        System.out.println(itemCartID);
 
+    @Test(priority = 10)
+    public void testDeleteProductInCart() {
         given()
-                .pathParam("cartId", cartID)
-                .pathParam("itemId", itemCartID)
+                .pathParam("cartId", cartId)
+                .pathParam("itemId", itemCartId)
                 .when()
                 .delete("/carts/{cartId}/items/{itemId}")
                 .then().statusCode(204);
     }
 
     @Test(priority = 11)
-    public void deleteNegativeTCProductInCartNotFound() {
+    public void testDeleteProductInCartNotFound() {
         given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .pathParam("cartId", cartID)
-                .pathParam("itemId", itemCartID)
+                .pathParam("cartId", cartId)
+                .pathParam("itemId", itemCartId)
                 .when()
                 .delete("/carts/{cartId}/items/{itemId}")
                 .then().statusCode(404);
     }
 
     @Test(priority = 12)
-    public void postAddItemToCart() {
-        JSONObject jsonObject = new JSONObject();
-
-        jsonObject.put("productId", productID);
+    public void testAddItemToCartAgain() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("productId", productId);
 
         Response response = given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(jsonObject.toJSONString())
-                .pathParam("cartId", cartID)
+                .body(requestBody.toJSONString())
+                .pathParam("cartId", cartId)
                 .when()
                 .post("/carts/{cartId}/items")
                 .then()
@@ -351,36 +290,32 @@ public class GroceryStoreTests {
                 .extract().response();
 
         JsonPath jsonPath = response.jsonPath();
-        itemCartID = jsonPath.getString("itemId");
-
-        System.out.println(response.getBody().asString());
-        System.out.println("itemId: " + itemCartID);
+        itemCartId = jsonPath.getString("itemId");
     }
 
-
     @Test(priority = 13)
-    public void getCartItemsResponseBody() {
+    public void testGetCartItemsAfterAdding() {
         given()
-                .pathParam("cartId", cartID)
+                .pathParam("cartId", cartId)
                 .when()
                 .get("/carts/{cartId}/items")
                 .then()
                 .log().body()
                 .body("", not(empty()))
-                .body("productId", hasItem(productID));
+                .body("productId", hasItem(productId));
     }
 
 
     @Test(priority = 13)
-    public void postAnOrder() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("cartId", cartID);
-        jsonObject.put("customerName", "Marry Jane");
+    public void testPlaceOrder() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("cartId", cartId);
+        requestBody.put("customerName", "Marry Jane");
 
         Response response = given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
-                .body(jsonObject.toJSONString())
+                .body(requestBody.toJSONString())
                 .auth().oauth2(accessToken)
                 .when()
                 .post("/orders/")
@@ -389,8 +324,17 @@ public class GroceryStoreTests {
                 .log().body()
                 .extract().response();
 
-        orderID = response.jsonPath().getString("orderId");
-        System.out.println(orderID);
+        orderId = response.jsonPath().getString("orderId");
+    }
+
+    @Test(priority = 14)
+    public void testGetAllOrders() {
+        given()
+                .auth().oauth2(accessToken)
+                .when()
+                .get("/orders/")
+                .then()
+                .statusCode(200);
     }
 
     @Test(priority = 14)
@@ -405,17 +349,17 @@ public class GroceryStoreTests {
 
 
     @Test(priority = 15)
-    public void patchOrderResponseStatusCode204() {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("customerName", "Joe Doe");
-        jsonObject.put("comment", "Pick-up at 4pm");
+    public void testUpdateOrder() {
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("customerName", "Joe Doe");
+        requestBody.put("comment", "Pick-up at 4pm");
 
         given()
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
-                .body(jsonObject.toJSONString())
+                .body(requestBody.toJSONString())
                 .auth().oauth2(accessToken)
-                .pathParam("orderId", orderID)
+                .pathParam("orderId", orderId)
                 .when()
                 .patch("/orders/{orderId}")
                 .then()
@@ -424,7 +368,7 @@ public class GroceryStoreTests {
 
 
     @Test(priority = 16)
-    public void getAllOrdersAfterPatch() {
+    public void testGetAllOrdersAfterUpdate() {
         given()
                 .auth().oauth2(accessToken)
                 .when()
@@ -433,12 +377,11 @@ public class GroceryStoreTests {
                 .statusCode(200);
     }
 
-
     @Test(priority = 17)
-    public void deleteOrders() {
+    public void testDeleteOrder() {
         given()
                 .auth().oauth2(accessToken)
-                .pathParam("orderId", orderID)
+                .pathParam("orderId", orderId)
                 .when()
                 .delete("/orders/{orderId}")
                 .then()
@@ -446,19 +389,18 @@ public class GroceryStoreTests {
     }
 
     @Test(priority = 18)
-    public void deleteOrdersNotFound() {
+    public void testDeleteOrderNotFound() {
         given()
                 .auth().oauth2(accessToken)
-                .pathParam("orderId", orderID)
+                .pathParam("orderId", orderId)
                 .when()
                 .delete("/orders/{orderId}")
                 .then()
                 .statusCode(404);
     }
 
-
     @Test(priority = 18)
-    public void getAllOrdersFinal() {
+    public void testGetAllOrdersFinal() {
         given()
                 .auth().oauth2(accessToken)
                 .when()
@@ -466,11 +408,4 @@ public class GroceryStoreTests {
                 .then()
                 .statusCode(200);
     }
-
-
-
-
-
-
 }
-
