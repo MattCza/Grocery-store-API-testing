@@ -1,14 +1,48 @@
-# Grocery-store-API-testing  
+# Grocery-store-API-testing in Postman, REST Assured, Requests    
+Ta kolekcja Postmana zawiera zestaw testów API dla sklepu spożywczego, który umożliwia składanie zamówień na produkty spożywcze z odbiorem w sklepie. Testy obejmują różne endpointy API i sprawdzają ich funkcjonalność, wydajność oraz poprawność odpowiedzi. Poniżej znajduje się opis poszczególnych testów.   
+
+Technologies Used
+
+    Postman: For API testing and automation.
+
+    JavaScript: For writing test scripts in Postman.
+
+    REST API: For interacting with the grocery store API.
+
 
 Grocery store testing with 3 different Techs:  
 
-Postman + newman-reporter-htmlextra  
+How to run: Postman + newman-reporter-htmlextra  
 ```
-https://www.npmjs.com/package/newman-reporter-htmlextra
-```
-```
+Install: 
+https://www.npmjs.com/package/newman-reporter-htmlextra  
+
+run:
 newman run "Grocery store API testing.postman_collection.json" -r htmlextra
 ```
+How to Use This Collection
+
+    Import the Collection:
+
+        Download the Grocery store API testing.postman_collection.json file.
+
+        Import it into Postman.
+
+    Set Environment Variables:
+
+        Ensure that the URL variable is set to https://simple-grocery-store-api.glitch.me.
+
+        Other variables like productID, cartID, token, etc., are set dynamically during the tests.
+
+    Run the Tests:
+
+        Execute the collection in Postman to run all the tests sequentially.
+
+
+
+
+
+
 
 Java -RestAssured  
 📌 Grocery Store API Testing with Rest Assured
