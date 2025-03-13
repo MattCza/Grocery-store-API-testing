@@ -2,8 +2,8 @@ import requests
 import pytest
 
 BASE_URL = "https://simple-grocery-store-api.glitch.me"
-FULL_NAME = "Timothy Lang12"
-EMAIL = "TimothyLang12@gmaasd.px"
+FULL_NAME = "Timothy Lang123"
+EMAIL = "TimothyLang123@gmaasd.px"
 access_token = None
 cart_id = None
 item_cart_id = None
@@ -29,28 +29,61 @@ def test_status_endpoint_returns_200_and_status_up():
 def test_get_all_products_within_500ms():
     response = send_get_request("/products")
     assert response.elapsed.total_seconds() < 5
+
     products = response.json()
     in_stock_products = [p for p in products if p.get("inStock")]
+
     assert in_stock_products
+
     global product_id, replace_product_id
     product_id = in_stock_products[0]["id"]
     replace_product_id = in_stock_products[3]["id"] if len(in_stock_products) > 3 else product_id
 
+def test_get_product_by_id():
+    response = send_get_request(f"/products/{product_id}")
+    assert response.json().get("id") == product_id
+
+def test_get_all_products_by_category_coffee():
+    response = send_get_request("/products", params={"category": "coffee"})
+    json_data = response.json()
+    categories = [item["category"] for item in json_data]
+    assert "coffee" in categories, f"'coffee' not found in {categories}"
+
+def test_get_all_products_with_category_fresh_produce_limited_to_3():
+    response = send_get_request("/products", params={'category': 'fresh-produce',
+                                                     'results': '3',
+                                                     'available': 'true'})
+    json_data = response.json()
+    assert len(json_data) == 3
+
 def test_register_new_api_key():
     global access_token
-    response = send_post_request("/api-clients", {"clientName": FULL_NAME, "clientEmail": EMAIL})
+    response = send_post_request("/api-clients", {"clientName": FULL_NAME,
+                                                  "clientEmail": EMAIL})
     assert response.status_code == 201
     access_token = response.json().get("accessToken")
 
 def test_register_api_key_conflict():
-    response = send_post_request("/api-clients", {"clientName": FULL_NAME, "clientEmail": EMAIL})
+    response = send_post_request("/api-clients", {"clientName": FULL_NAME,
+                                                  "clientEmail": EMAIL})
     assert response.status_code == 409
+
+def test_register_api_key_with_invalid_email():
+    response = send_post_request("/api-clients", {"clientName": FULL_NAME,
+                                                  "clientEmail": "EMAIL"})
+    assert response.status_code == 400
 
 def test_create_new_cart():
     global cart_id
     response = send_post_request("/carts", {})
     assert response.status_code == 201
     cart_id = response.json().get("cartId")
+    assert cart_id is not None
+
+def test_get_cart_status_code_200():
+    response = send_get_request(f"/carts/{cart_id}")
+    assert response.status_code == 200
+
 
 def test_add_item_to_cart():
     global item_cart_id
@@ -58,9 +91,32 @@ def test_add_item_to_cart():
     assert response.status_code == 201
     item_cart_id = response.json().get("itemId")
 
+def test_add_item_to_cart_conflict():
+    response = send_post_request(f"/carts/{cart_id}/items", {"productId": product_id})
+    error_message = response.json().get("error")
+    assert error_message == "This product has already been added to cart."
+
+def test_get_cart_items():
+    response = send_get_request(f"/carts/{cart_id}/items")
+    json_data = response.json()
+    assert json_data, "Cart is empty"
+
+    products_ids = [item["productId"] for item in json_data]
+    assert product_id in products_ids, f"Product with id= {product_id} not found in response"
+
+
 def test_update_product_quantity_in_cart():
     response = requests.patch(f"{BASE_URL}/carts/{cart_id}/items/{item_cart_id}", json={"quantity": 2})
     assert response.status_code == 204
+
+def test_get_cart_items_after_quantity_update():
+    response = send_get_request(f"/carts/{cart_id}/items")
+    json_data = response.json()
+    assert json_data, "Cart is empty"
+
+    quantities = [item["quantity"] for item in json_data]
+    assert 2 in quantities, "No update in quantity!"
+
 
 def test_place_order():
     global order_id

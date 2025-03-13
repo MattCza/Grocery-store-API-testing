@@ -232,8 +232,8 @@ public class GroceryStoreTests extends BaseTest{
                 .then()
                 .body("quantity", hasItem(2));
     }
-
-    @Test(priority = 9)
+//////////////////////////////////////////////////////////////
+    @Test(priority = 8)
     public void testReplaceProductInCart() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("productId", replaceProductId);
@@ -251,7 +251,7 @@ public class GroceryStoreTests extends BaseTest{
     }
 
 
-    @Test(priority = 10)
+    @Test(priority = 9)
     public void testDeleteProductInCart() {
         given()
                 .pathParam("cartId", cartId)
@@ -261,7 +261,7 @@ public class GroceryStoreTests extends BaseTest{
                 .then().statusCode(204);
     }
 
-    @Test(priority = 11)
+    @Test(priority = 10)
     public void testDeleteProductInCartNotFound() {
         given()
                 .contentType(ContentType.JSON)
@@ -273,7 +273,7 @@ public class GroceryStoreTests extends BaseTest{
                 .then().statusCode(404);
     }
 
-    @Test(priority = 12)
+    @Test(priority = 11)
     public void testAddItemToCartAgain() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("productId", productId);
@@ -293,7 +293,7 @@ public class GroceryStoreTests extends BaseTest{
         itemCartId = jsonPath.getString("itemId");
     }
 
-    @Test(priority = 13)
+    @Test(priority = 12)
     public void testGetCartItemsAfterAdding() {
         given()
                 .pathParam("cartId", cartId)
@@ -306,7 +306,7 @@ public class GroceryStoreTests extends BaseTest{
     }
 
 
-    @Test(priority = 13)
+    @Test(priority = 12)
     public void testPlaceOrder() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("cartId", cartId);
@@ -327,7 +327,7 @@ public class GroceryStoreTests extends BaseTest{
         orderId = response.jsonPath().getString("orderId");
     }
 
-    @Test(priority = 14)
+    @Test(priority = 13)
     public void testGetAllOrders() {
         given()
                 .auth().oauth2(accessToken)
@@ -338,17 +338,6 @@ public class GroceryStoreTests extends BaseTest{
     }
 
     @Test(priority = 14)
-    public void getAllOrders() {
-        given()
-                .auth().oauth2(accessToken)
-                .when()
-                .get("/orders/")
-                .then()
-                .statusCode(200);
-    }
-
-
-    @Test(priority = 15)
     public void testUpdateOrder() {
         JSONObject requestBody = new JSONObject();
         requestBody.put("customerName", "Joe Doe");
@@ -367,7 +356,7 @@ public class GroceryStoreTests extends BaseTest{
     }
 
 
-    @Test(priority = 16)
+    @Test(priority = 15)
     public void testGetAllOrdersAfterUpdate() {
         given()
                 .auth().oauth2(accessToken)
@@ -377,7 +366,7 @@ public class GroceryStoreTests extends BaseTest{
                 .statusCode(200);
     }
 
-    @Test(priority = 17)
+    @Test(priority = 16)
     public void testDeleteOrder() {
         given()
                 .auth().oauth2(accessToken)
@@ -388,7 +377,7 @@ public class GroceryStoreTests extends BaseTest{
                 .statusCode(204);
     }
 
-    @Test(priority = 18)
+    @Test(priority = 17)
     public void testDeleteOrderNotFound() {
         given()
                 .auth().oauth2(accessToken)
