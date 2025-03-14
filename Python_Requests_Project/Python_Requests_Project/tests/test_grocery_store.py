@@ -1,8 +1,8 @@
 import requests
 
 BASE_URL = "https://simple-grocery-store-api.glitch.me"
-FULL_NAME = "Timothy Lang123454611118"
-EMAIL = "TimothyLang123454611118@gmaasd.px"
+FULL_NAME = "Griffith King"
+EMAIL = "GriffithKing@gmaasd.px"
 
 access_token = None
 cart_id = None
