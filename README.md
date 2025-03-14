@@ -1,5 +1,20 @@
 # **Automated Testing of Grocery Store API**
 
+## **Table of Contents**
+1. [Project Description](#project-description)
+2. [Technologies and Tools Used](#technologies-and-tools-used)
+3. [Test Coverage](#test-coverage)
+4. [Key Features](#key-features)
+5. [Test Cases](#test-cases)
+   - [Status Endpoint](#1-status-endpoint)
+   - [Product Endpoints](#2-product-endpoints)
+   - [Authentication](#3-authentication)
+   - [Cart Management](#4-cart-management)
+   - [Order Management](#5-order-management)
+6. [Upcoming Work](#upcoming-work)
+
+---
+
 ## **Project Description**
 This project focuses on automating the testing of a Grocery Store API using **Java (RestAssured)**, **Postman**, and **Python (requests)**.  
 The goal is to ensure that various endpoints of the API function correctly across different testing tools, providing a robust test suite that can be run regularly to catch any issues or regressions.  
