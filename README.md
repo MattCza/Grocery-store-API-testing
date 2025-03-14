@@ -2,10 +2,10 @@
 
 ## **Table of Contents** 📑
 1. [Project Description](#project-description-)
-2. [Technologies and Tools Used](#technologies-and-tools-used-)
+2. [Technologies and Tools Used](#technologies-and-tools-used)
 3. [Test Coverage](#test-coverage-)
 4. [Key Features](#key-features-)
-5. [Test Cases](#test-cases-)
+5. [Test Cases](#test-cases)
    - [Status Endpoint](#1-status-endpoint-)
    - [Product Endpoints](#2-product-endpoints-)
    - [Authentication](#3-authentication-)
@@ -27,7 +27,7 @@ The project covers:
 
 ---
 
-## **Technologies and Tools Used** 🛠️
+## Technologies and Tools Used
 1. **Java**:
    - **RestAssured**: For API testing and validation. 
    - **TestNG**: For test execution and reporting. 
