@@ -1,4 +1,4 @@
-# **Automated Testing of Grocery Store API** 🛒🧪
+# **Automated Testing of Grocery Store API** 🛒
 
 ## **Table of Contents** 📑
 1. [Project Description](#project-description-)
@@ -23,40 +23,40 @@ The project covers:
 - **Endpoint validation**: Ensuring correct status codes and responses. ✅
 - **Data validation**: Verifying the accuracy of returned data. 📊
 - **Authentication**: Testing API key registration and usage. 🔑
-- **Cart and Order Management**: Testing creation, updating, and deletion of carts and orders. 🛒📦
+- **Cart and Order Management**: Testing creation, updating, and deletion of carts and orders. 🛒
 
 ---
 
 ## **Technologies and Tools Used** 🛠️
 1. **Java**:
-   - **RestAssured**: For API testing and validation. 🧪
-   - **TestNG**: For test execution and reporting. 📋
-   - **Maven**: For dependency management. 📦
+   - **RestAssured**: For API testing and validation. 
+   - **TestNG**: For test execution and reporting. 
+   - **Maven**: For dependency management. 
 2. **Postman**:
-   - **Collections**: For organizing and running API tests. 📂
-   - **Pre-request Scripts and Tests**: For dynamic data handling and assertions. 🧠
-3. **Python**:
-   - **requests**: For sending HTTP requests and handling responses. 🐍
-   - **pytest**: For test execution and reporting. 📊
+   - **Collections**: For organizing and running API tests. 
+   - **Pre-request Scripts and Tests**: For dynamic data handling and assertions. 
+3. **Python**: 🐍
+   - **requests**: For sending HTTP requests and handling responses. 
+   - **pytest**: For test execution and reporting. 
 
 ---
 
 ## **Test Coverage** 🧾
 The tests cover the following functionalities across all three technologies:
-1. **Status Endpoint**: Verify the API is up and running. 🟢
-2. **Product Endpoints**:
-   - Fetch all products. 📋
-   - Fetch products by category. 🏷️
-   - Fetch a specific product by ID. 🔍
-3. **Authentication**:
-   - Register a new API key. 🔑
-   - Handle conflicts and invalid data during registration. ⚠️
-4. **Cart Management**:
-   - Create a new cart. 🛒
-   - Add, update, and delete items in the cart. ➕🔄🗑️
-5. **Order Management**:
-   - Place a new order. 📦
-   - Update and delete orders. 🔄🗑️
+1. **Status Endpoint** 🟢: Verify the API is up and running. 
+2. **Product Endpoints** 📋: 
+   - Fetch all products. 
+   - Fetch products by category. 
+   - Fetch a specific product by ID. 
+3. **Authentication** 🔑: 
+   - Register a new API key. 
+   - Handle conflicts and invalid data during registration. ⚠
+4. **Cart Management** 🛒: 
+   - Create a new cart. 
+   - Add, update, and delete items in the cart. 
+5. **Order Management** 📦: 
+   - Place a new order. 
+   - Update and delete orders. 
 
 ---
 
@@ -68,7 +68,7 @@ The tests cover the following functionalities across all three technologies:
 
 ---
 
-## **Test Cases** �
+## **Test Cases** 
 ### **1. Status Endpoint** 🟢
 - **Objective**: Verify the API status.
 - **Technologies**:
@@ -85,7 +85,17 @@ The tests cover the following functionalities across all three technologies:
             .log().body();
     }
     ```
-  - Postman: GET request to `/status` with assertions for status code and response body.
+  - Postman:
+    ```javascript
+    pm.test("Status code is 200", function () {
+        pm.response.to.have.status(200);
+    });
+
+    pm.test("Server response: UP", function () {
+        var jsonData = pm.response.json();
+        pm.expect(jsonData.status).to.eql("UP");
+    });
+    ```
   - Python:
     ```python
     def test_status_endpoint_returns_200_and_status_up():
@@ -114,7 +124,27 @@ The tests cover the following functionalities across all three technologies:
         replaceProductId = inStockProducts.size() > 3 ? (int) inStockProducts.get(3).get("id") : productId;
     }
     ```
-  - Postman: Collection runner with dynamic assertions.
+  - Postman:
+    ```javascript
+    pm.test("Show all products", function () {
+        pm.response.to.have.status(200);
+    });
+
+    const response = pm.response.json();
+    const products = response.filter((product) => product.inStock === true);
+    const product1 = products[0];
+    const product4 = products[3];
+
+    pm.collectionVariables.set("productID", product1.id);
+    pm.collectionVariables.set("replaceProductID", product4.id);
+    console.log(product1.id);
+    console.log(product4.id);
+    
+
+    pm.test("Response time is less than 500ms", function () {
+        pm.expect(pm.response.responseTime).to.be.below(500);
+    });
+    ```
   - Python:
     ```python
     def test_get_all_products_within_500ms():
@@ -141,7 +171,16 @@ The tests cover the following functionalities across all three technologies:
         accessToken = extractJsonValue(response, "accessToken");
     }
     ```
-  - Postman: Pre-request scripts for dynamic data and tests for response validation.
+  - Postman:
+    ```javascript
+    pm.test("API registration: succeed", function () {
+        pm.expect(pm.response.code).to.equal(201);
+    });
+
+    const response = pm.response.json();
+    pm.collectionVariables.set("token", response.accessToken);
+    console.log(response.accessToken);
+    ```
   - Python:
     ```python
     def test_register_new_api_key():
@@ -167,7 +206,17 @@ The tests cover the following functionalities across all three technologies:
         Assert.assertNotNull(itemCartId, "Item ID should not be null");
     }
     ```
-  - Postman: Chained requests with variables for cart and item IDs.
+  - Postman:
+    ```javascript
+    const response = pm.response.json();
+    pm.collectionVariables.set("cartID", response.cartId);
+    console.log(response.cartId);
+
+    pm.test("New cart: created with ID = " + pm.collectionVariables.get("cartID"), function () {
+        pm.expect(pm.response.code).to.equal(201);
+    });
+
+    ```
   - Python:
     ```python
     def test_add_item_to_cart():
@@ -202,7 +251,16 @@ The tests cover the following functionalities across all three technologies:
         orderId = response.jsonPath().getString("orderId");
     }
     ```
-  - Postman: Token management and order workflows.
+  - Postman:
+    ```javascript
+    pm.test("Save orderID as a collection variable", function () {
+        pm.collectionVariables.set("orderID", pm.response.json().orderId);
+    });
+
+    pm.test("Response orders list is not empty", function () {
+        pm.expect(pm.response.json()).to.not.be.empty;
+    });
+    ```
   - Python:
     ```python
     def test_place_order():
@@ -214,11 +272,11 @@ The tests cover the following functionalities across all three technologies:
 ---
 
 ## **Upcoming Work** 🚀
-- **Performance Testing**: Integrate tools like JMeter or k6 for load testing. 📈
-- **CI/CD Integration**: Automate test execution using Jenkins or GitHub Actions. 🤖
-- **Reporting**: Generate detailed test reports for all three technologies. 📊
-- **Cross-Browser/Platform Testing**: Extend testing to different environments and configurations. 🌐  
+- **Performance Testing**: Integrate tools like JMeter or k6 for load testing. 
+- **CI/CD Integration**: Automate test execution using Jenkins or GitHub Actions. 
+- **Reporting**: Generate detailed test reports for all three technologies. 
+- **Cross-Browser/Platform Testing**: Extend testing to different environments and configurations. 
 
 ---
 
-This project demonstrates the versatility of API testing across multiple technologies, ensuring comprehensive coverage and reliability. 🧪✨
+This project demonstrates the versatility of API testing across multiple technologies, ensuring comprehensive coverage and reliability. ✨
