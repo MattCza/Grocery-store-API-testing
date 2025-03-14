@@ -2,17 +2,19 @@
 
 ## **Table of Contents** 📑
 1. [Project Description](#project-description-)
-2. [Technologies and Tools Used](#technologies-and-tools-used)
-3. [Test Coverage](#test-coverage-)
-4. [Key Features](#key-features-)
-5. [Test Cases](#test-cases)
+2. [How to Test](#how-to-test)
+   - [Postman](#postman-newman)
+   - [Python](#python-pytest)
+3. [Technologies and Tools Used](#technologies-and-tools-used)
+4. [Test Coverage](#test-coverage-)
+5. [Key Features](#key-features-)
+6. [Test Cases](#test-cases)
    - [Status Endpoint](#1-status-endpoint-)
    - [Product Endpoints](#2-product-endpoints-)
    - [Authentication](#3-authentication-)
    - [Cart Management](#4-cart-management-)
    - [Order Management](#5-order-management-)
-6. [Upcoming Work](#upcoming-work-)
-
+7. [Upcoming Work](#upcoming-work-)
 ---
 
 ## **Project Description** 📝
@@ -24,6 +26,38 @@ The project covers:
 - **Data validation**: Verifying the accuracy of returned data. 📊
 - **Authentication**: Testing API key registration and usage. 🔑
 - **Cart and Order Management**: Testing creation, updating, and deletion of carts and orders. 🛒
+
+---
+
+## **How to Test**
+
+### **Postman newman**
+1. **Install Newman and `newman-reporter-htmlextra`**:
+   ```bash
+   npm install -g newman
+   npm install -g newman-reporter-htmlextra
+
+Run tests and generate HTML report:  
+   ```bash
+   newman run "Grocery store API testing.postman_collection.json" -r htmlextra
+```
+The report will be saved in the newman folder as an HTML file.  
+More info:
+
+    Documentation: https://www.npmjs.com/package/newman-reporter-htmlextra
+
+### **Python pytest**
+
+Install pytest and pytest-html:
+   ```bash
+    pip install pytest pytest-html
+   ```
+Run tests and generate HTML report:
+   ```bash
+    pytest test_grocery_store.py --html=report.html
+   ```
+The report will be saved as report.html in the current directory.
+  
 
 ---
 
@@ -274,7 +308,7 @@ The tests cover the following functionalities across all three technologies:
 ## **Upcoming Work** 🚀
 - **Performance Testing**: Integrate tools like JMeter or k6 for load testing. 
 - **CI/CD Integration**: Automate test execution using Jenkins or GitHub Actions. 
-- **Reporting**: Generate detailed test reports for all three technologies. 
+- **Reporting**: Generate detailed test reports for Java
 - **Cross-Browser/Platform Testing**: Extend testing to different environments and configurations. 
 
 ---
