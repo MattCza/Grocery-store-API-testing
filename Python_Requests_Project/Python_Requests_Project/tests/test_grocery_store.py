@@ -1,9 +1,8 @@
 import requests
-import pytest
 
 BASE_URL = "https://simple-grocery-store-api.glitch.me"
-FULL_NAME = "Timothy Lang12345461111"
-EMAIL = "TimothyLang12345461111@gmaasd.px"
+FULL_NAME = "Timothy Lang123454611118"
+EMAIL = "TimothyLang123454611118@gmaasd.px"
 
 access_token = None
 cart_id = None
@@ -11,6 +10,7 @@ item_cart_id = None
 order_id = None
 product_id = None
 replace_product_id = None
+
 
 
 def test_status_endpoint_returns_200_and_status_up():
