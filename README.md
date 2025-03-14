@@ -1,326 +1,152 @@
-# Grocery-store-API-testing in Postman, REST Assured, Requests    
-Ta kolekcja Postmana zawiera zestaw testów API dla sklepu spożywczego, który umożliwia składanie zamówień na produkty spożywcze z odbiorem w sklepie. Testy obejmują różne endpointy API i sprawdzają ich funkcjonalność, wydajność oraz poprawność odpowiedzi. Poniżej znajduje się opis poszczególnych testów.   
+Automated Testing of Grocery Store API
+Project Description
 
-Technologies Used
+This project focuses on automating the testing of a Grocery Store API using Java (RestAssured), Postman, and Python (requests).
+The goal is to ensure that various endpoints of the API function correctly across different testing tools, providing a robust test suite that can be run regularly to catch any issues or regressions.
 
-    Postman: For API testing and automation.
+The project covers:
 
-    JavaScript: For writing test scripts in Postman.
+    Endpoint validation: Ensuring correct status codes and responses.
 
-    REST API: For interacting with the grocery store API.
+    Data validation: Verifying the accuracy of returned data.
 
+    Authentication: Testing API key registration and usage.
 
-Grocery store testing with 3 different Techs:  
+    Cart and Order Management: Testing creation, updating, and deletion of carts and orders.
 
-How to run: Postman + newman-reporter-htmlextra  
-```
-Install: 
-https://www.npmjs.com/package/newman-reporter-htmlextra  
+Technologies and Tools Used
 
-run:
-newman run "Grocery store API testing.postman_collection.json" -r htmlextra
-```
+    Java:
 
-📑 Table of Contents
+        RestAssured: For API testing and validation.
 
-    🎯 Objective
+        TestNG: For test execution and reporting.
 
-    🛠 Tools & Technologies Used
+        Maven: For dependency management.
 
-    🔗 API Endpoints Tested
+    Postman:
 
-    ✅ Test Scenarios
+        Collections: For organizing and running API tests.
 
-        🟢 Status Code Verification
+        Pre-request Scripts and Tests: For dynamic data handling and assertions.
 
-        🔍 Fetching Product Data
+    Python:
 
-        🛒 Cart Management
+        requests: For sending HTTP requests and handling responses.
 
-        📦 Order Placement & Management
+        pytest: For test execution and reporting.
 
-    🔍 JSON Schema Validation
+Test Coverage
 
-    ⚙️ Test Execution Order
+The tests cover the following functionalities across all three technologies:
 
-    📌 Example Requests
+    Status Endpoint: Verify the API is up and running.
 
-    🚀 Next Steps
+    Product Endpoints:
 
-🎯 Objective
+        Fetch all products.
 
-The purpose of this project is to test the Grocery Store API using Postman to validate its functionality, response codes, and data integrity. The tests cover GET, POST, PUT, PATCH, and DELETE requests to ensure that the API behaves as expected for product retrieval, cart management, and order placement.
+        Fetch products by category.
 
-🚀 The API is hosted at https://simple-grocery-store-api.glitch.me.
-🛠 Tools & Technologies Used
+        Fetch a specific product by ID.
 
-    Postman – for API testing and automation
+    Authentication:
 
-    JavaScript – for writing test scripts in Postman
+        Register a new API key.
 
-    REST API – for interacting with the grocery store API
+        Handle conflicts and invalid data during registration.
 
-    JSON Schema – for validating API responses
+    Cart Management:
 
-🔗 API Endpoints Tested
+        Create a new cart.
 
-    GET /status – Check server status
+        Add, update, and delete items in the cart.
 
-    GET /products – Fetch all products
+    Order Management:
 
-    GET /products/:productId – Fetch a product by ID
+        Place a new order.
 
-    GET /products?category=coffee – Fetch products by category
+        Update and delete orders.
 
-    POST /api-clients – Register a new API client
+Key Features
 
-    POST /carts – Create a new cart
+    Cross-Technology Testing: Tests are implemented in Java (RestAssured), Postman, and Python (requests) to ensure consistency and reliability.
 
-    POST /carts/:cartId/items – Add an item to the cart
+    Reusable Components: Helper methods and utilities are created to reduce code duplication.
 
-    GET /carts/:cartId/items – Fetch items in the cart
+    Data-Driven Testing: Dynamic data handling for API keys, cart IDs, and order IDs.
 
-    PATCH /carts/:cartId/items/:itemId – Update item quantity in the cart
+    Validation: Extensive validation of status codes, response bodies, and error messages.
 
-    PUT /carts/:cartId/items/:itemId – Replace an item in the cart
+Test Cases
+1. Status Endpoint
 
-    DELETE /carts/:cartId/items/:itemId – Remove an item from the cart
+    Objective: Verify the API status.
 
-    POST /orders – Place an order
+    Technologies:
 
-    GET /orders – Fetch all orders
+        Java: given().when().get("/status").then().statusCode(200).body("status", equalTo("UP"));
 
-    PATCH /orders/:orderId – Modify an order
+        Postman: GET request to /status with assertions for status code and response body.
 
-    DELETE /orders/:orderId – Delete an order
+        Python: requests.get("/status") with assertions for status code and JSON response.
 
-✅ Test Scenarios
-🟢 Status Code Verification
+2. Product Endpoints
 
-✔️ Ensures that the API returns 200 OK for valid requests.
-✔️ Verifies that invalid requests return expected errors (e.g., 404 Not Found).
-🔍 Fetching Product Data
+    Objective: Fetch and validate product data.
 
-✔️ Retrieves all products and verifies that they are in stock.
-✔️ Fetches a specific product by ID and validates its details.
-✔️ Filters products by category (e.g., "coffee") and ensures all returned products belong to the specified category.
-🛒 Cart Management
+    Technologies:
 
-✔️ Creates a new cart and saves the cart ID for further use.
-✔️ Adds a product to the cart and verifies that the item is successfully added.
-✔️ Updates the quantity of an item in the cart and validates the change.
-✔️ Replaces an item in the cart with another product.
-✔️ Removes an item from the cart and ensures it is no longer present.
-📦 Order Placement & Management
+        Java: RestAssured queries with JSONPath for data extraction.
 
-✔️ Places an order and saves the order ID for further use.
-✔️ Retrieves all orders and verifies that the list is not empty.
-✔️ Modifies an existing order (e.g., updates customer name and comments).
-✔️ Deletes an order and ensures it is removed from the system.
+        Postman: Collection runner with dynamic assertions.
 
-⚙️ Test Execution Order
+        Python: requests.get() with pytest assertions.
 
-The tests are designed to run sequentially, with each test depending on the output of the previous one. For example:
+3. Authentication
 
-    GET /status – Verify the server is up.
+    Objective: Register and validate API keys.
 
-    GET /products – Fetch products and save IDs for later use.
+    Technologies:
 
-    POST /api-clients – Register a new client and save the access token.
+        Java: POST requests with JSON payloads and error handling.
 
-    POST /carts – Create a new cart and save the cart ID.
+        Postman: Pre-request scripts for dynamic data and tests for response validation.
 
-    POST /carts/:cartId/items – Add a product to the cart.
+        Python: requests.post() with error handling and assertions.
 
-    POST /orders – Place an order and save the order ID.
+4. Cart Management
 
-    DELETE /orders/:orderId – Clean up by deleting the order.
+    Objective: Create, update, and delete carts and items.
 
-📌 Example Requests
-POST /api-clients – Register a New Client
+    Technologies:
 
-📩 Request Body:
+        Java: CRUD operations using RestAssured.
 
-🚀 Next Steps
+        Postman: Chained requests with variables for cart and item IDs.
 
-✅ Expand test coverage with more complex assertions.
-✅ Implement parameterized tests for dynamic data validation.
-✅ Integrate tests with CI/CD pipelines to automate execution.
-✅ Enhance JSON Schema validation for more structured testing.
-✅ Add tests for edge cases (e.g., out-of-stock products, invalid inputs).
-✅ Extend the collection to include more API endpoints (e.g., user management).
+        Python: requests for CRUD operations with pytest validation.
 
+5. Order Management
 
+    Objective: Place, update, and delete orders.
 
+    Technologies:
 
+        Java: OAuth2 token handling and order operations.
 
+        Postman: Token management and order workflows.
 
-Java -RestAssured  
-📌 Grocery Store API Testing with Rest Assured
-📑 Table of Contents
+        Python: requests with token handling and order operations.
 
-    🎯 Objective
+Upcoming Work
 
-    🛠 Tools & Technologies Used
+    Performance Testing: Integrate tools like JMeter or k6 for load testing.
 
-    🔗 API Endpoints Tested
+    CI/CD Integration: Automate test execution using Jenkins or GitHub Actions.
 
-    ✅ Test Scenarios
+    Reporting: Generate detailed test reports for all three technologies.
 
-        🟢 Status Code Verification
+    Cross-Browser/Platform Testing: Extend testing to different environments and configurations.
 
-        🔍 Fetching Product Data
-
-        ➕ Registering a New API Client
-
-        🛒 Cart Management
-
-        📦 Order Management
-
-        🧹 Cleanup and Negative Test Cases
-
-    ⚙️ Test Execution Order with @Priority
-
-    📌 Example Requests
-
-    🚀 Next Steps
-
-🎯 Objective
-
-The purpose of this project is to test the Grocery Store API using Rest Assured to validate its functionality, response codes, and data integrity. The tests cover GET, POST, PATCH, PUT, and DELETE requests to ensure the API behaves as expected in various scenarios, including cart management, order placement, and user registration.
-🛠 Tools & Technologies Used
-
-    Rest Assured – for API testing
-
-    TestNG – for test execution and prioritization
-
-    JSON Simple – for creating request bodies
-
-    Hamcrest Matchers – for response validation
-
-    OAuth2 – for authentication in order management
-
-🔗 API Endpoints Tested
-
-    GET /status – Check API status
-
-    GET /products – Fetch all products
-
-    GET /products/{id} – Fetch a product by ID
-
-    POST /api-clients – Register a new API client
-
-    POST /carts – Create a new cart
-
-    POST /carts/{cartId}/items – Add items to the cart
-
-    PATCH /carts/{cartId}/items/{itemId} – Update item quantity in the cart
-
-    PUT /carts/{cartId}/items/{itemId} – Replace an item in the cart
-
-    DELETE /carts/{cartId}/items/{itemId} – Remove an item from the cart
-
-    POST /orders – Place an order
-
-    PATCH /orders/{orderId} – Update an order
-
-    DELETE /orders/{orderId} – Delete an order
-
-✅ Test Scenarios
-🟢 Status Code Verification
-
-✔️ Verify that the API returns 200 OK for valid requests.
-✔️ Ensure that invalid requests return expected errors (e.g., 404 Not Found, 400 Bad Request).
-🔍 Fetching Product Data
-
-✔️ Retrieve all products and validate response time (less than 5000ms).
-✔️ Fetch a specific product by ID and validate its details.
-✔️ Filter products by category (e.g., "coffee", "fresh-produce") and limit results.
-➕ Registering a New API Client
-
-✔️ Register a new API client and generate an access token.
-✔️ Validate error responses for duplicate registration and invalid email formats.
-🛒 Cart Management
-
-✔️ Create a new cart and verify its creation.
-✔️ Add items to the cart and validate the response.
-✔️ Update item quantity and replace items in the cart.
-✔️ Remove items from the cart and verify deletion.
-📦 Order Management
-
-✔️ Place an order using the cart and validate the response.
-✔️ Update order details (e.g., customer name, comments).
-✔️ Delete an order and verify its removal.
-🧹 Cleanup and Negative Test Cases
-
-✔️ Clean up the test environment by deleting carts and orders.
-✔️ Test negative scenarios (e.g., adding duplicate items, deleting non-existent orders).
-⚙️ Test Execution Order with @Priority
-
-To ensure proper test execution, the @Test(priority = X) annotation is used:
-
-    Priority 1: Verify API status and fetch product data.
-
-    Priority 2: Register a new API client and validate responses.
-
-    Priority 3-7: Manage cart operations (create, add items, update, delete).
-
-    Priority 8-13: Place and manage orders.
-
-    Priority 14-18: Clean up and perform negative test cases.
-
-📌 Example Requests
-POST /api-clients – Register a New API Client
-
-📩 Request Body:
-json
-Copy
-
-{
-  "clientName": "Timothy Lang",
-  "clientEmail": "TimothyLang@gmaasd.px"
-}
-
-POST /carts/{cartId}/items – Add an Item to the Cart
-
-📩 Request Body:
-json
-Copy
-
-{
-  "productId": 4643
-}
-
-PATCH /orders/{orderId} – Update an Order
-
-📩 Request Body:
-json
-Copy
-
-{
-  "customerName": "Joe Doe",
-  "comment": "Pick-up at 4pm"
-}
-
-🚀 Next Steps
-
-✅ Expand test coverage with more complex assertions.
-✅ Implement parameterized tests for dynamic data validation.
-✅ Integrate tests with CI/CD pipelines for automated execution.
-✅ Add support for additional API endpoints (e.g., product reviews, promotions).
-✅ Enhance error handling and logging for better debugging.
-✅ Include performance testing to validate API scalability.
-⚙️ Running the Tests
-
-    Clone the repository.
-
-    Install dependencies (Rest Assured, TestNG, etc.).
-
-    Run the test suite using TestNG.
-
-    Review test results and logs for any failures or issues.
-
-This structure provides a clear and concise overview of your project, making it easy for others to understand its purpose, functionality, and future improvements. 🚀
-
-
-Python - Requests  
+This project demonstrates the versatility of API testing across multiple technologies, ensuring comprehensive coverage and reliability.
